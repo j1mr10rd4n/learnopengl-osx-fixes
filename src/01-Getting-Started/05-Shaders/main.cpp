@@ -16,16 +16,19 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Shaders
 const GLchar* vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 position;\n"
+    "layout (location = 0) in vec3 position; // The position variable has attribute position 0\n"
+    "out vec4 vertexColor; // Specify a color output to the fragment shader\n"
     "void main()\n"
     "{\n"
-    "gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+    "gl_Position = vec4(position, 1.0); // See how we directly give a vec3 to vec4's constructor\n"
+    "vertexColor = vec4(0.5f, 0.0f, 0.0f, 1.0f); // Set the output variable to a dark-red color\n"
     "}\0";
 const GLchar* fragmentShaderSource = "#version 330 core\n"
+    "in vec4 vertexColor; // The input variable from the vertex shader (same name and same type)\n"
     "out vec4 color;\n"
     "void main()\n"
     "{\n"
-    "color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "color = vertexColor;\n"
     "}\n\0";
 
 // The MAIN function, from here we start the application and run the game loop
