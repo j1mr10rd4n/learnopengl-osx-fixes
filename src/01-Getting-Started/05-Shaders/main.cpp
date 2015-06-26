@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 // GLEW
 #define GLEW_STATIC
@@ -16,19 +17,20 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Shaders
 const GLchar* vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 position; // The position variable has attribute position 0\n"
-    "out vec4 vertexColor; // Specify a color output to the fragment shader\n"
+    "layout (location = 0) in vec3 position;\n"
+    "layout (location = 1) in vec3 color;\n"
+    "out vec3 ourColor;\n"
     "void main()\n"
     "{\n"
-    "gl_Position = vec4(position, 1.0); // See how we directly give a vec3 to vec4's constructor\n"
-    "vertexColor = vec4(0.5f, 0.0f, 0.0f, 1.0f); // Set the output variable to a dark-red color\n"
+    "gl_Position = vec4(position, 1.0);\n"
+    "ourColor = color;\n"
     "}\0";
 const GLchar* fragmentShaderSource = "#version 330 core\n"
-    "in vec4 vertexColor; // The input variable from the vertex shader (same name and same type)\n"
     "out vec4 color;\n"
+    "uniform vec4 ourColor;\n"
     "void main()\n"
     "{\n"
-    "color = vertexColor;\n"
+    "color = ourColor;\n"
     "}\n\0";
 
 // The MAIN function, from here we start the application and run the game loop
@@ -101,9 +103,10 @@ int main()
 
     // Set up vertex data (and buffer(s)) and attribute pointers
     GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f, // Left
-         0.5f, -0.5f, 0.0f, // Right
-         0.0f,  0.5f, 0.0f  // Top
+        // Positions
+        0.5f, -0.5f, 0.0f,  // Bottom Right
+        -0.5f, -0.5f, 0.0f,  // Bottom Left
+        0.0f,  0.5f, 0.0f   // Top
     };
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -114,12 +117,12 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // Position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // Note that this is allowed, the call to glVertexAttribPointer registered VBO as the currently bound vertex buffer object so afterwards we can safely unbind
+    glBindVertexArray(0); // Unbind VAO
 
-    glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
     // Game loop
     while (!glfwWindowShouldClose(window))
@@ -132,8 +135,16 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw our first triangle
+        // Be sure to activate the shader
         glUseProgram(shaderProgram);
+
+        // Update the uniform color
+        GLfloat timeValue = glfwGetTime();
+        GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
+        GLint vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+        // Draw the triangle
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
